@@ -52,10 +52,19 @@ hittable_list random_scene()
     auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1));
     world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
 
-    auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-    world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
+    // auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
+    auto material3 = make_shared<noise_texture>(4);
+    world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, make_shared<lambertian>(material3)));
 
     return world;
+}
+
+hittable_list earth() {
+    auto earth_texture = make_shared<image_texture>("earthmap.jpg");
+    auto earth_surface = make_shared<lambertian>(earth_texture);
+    auto globe = make_shared<sphere>(point3(0,0,0), 2, earth_surface);
+
+    return hittable_list(globe);
 }
 
 color ray_color(const ray& r, const hittable& world, int depth)
@@ -84,27 +93,45 @@ int main()
 {
     // file write
     std::ofstream OutImage;
-    OutImage.open("results/NextWeek_3.1.ppm");
+    OutImage.open("results/NextWeek_6.2.ppm");
 
     // Image
     const auto aspect_ratio = 16.0 / 9.0;
-    const int image_width = 1200;
+    const int image_width = 400;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 100;
-    const int max_depth = 50; 
+    const int samples_per_pixel = 50;
+    const int max_depth = 25; 
 
+    hittable_list world;
 
-    // World
-    auto world = random_scene();
+    point3 lookfrom;
+    point3 lookat;
+    auto vfov = 40.0;
+    auto aperture = 0.0;
 
-    // Camera
-    point3 lookfrom(13, 2, 3);
-    point3 lookat(0, 0, 0);
+    switch (0) {
+        case 1:
+            world = random_scene();
+            lookfrom = point3(13,2,3);
+            lookat = point3(0,0,0);
+            vfov = 20.0;
+            aperture = 0.1;
+            break;
+
+        default:
+        case 2:
+            world = earth();
+            lookfrom = point3(13,2,-3);
+            lookat = point3(0,0,0);
+            vfov = 20.0;
+            break;
+
+    }
+
     vec3 vup(0, 1, 0);
     auto dist_to_focus = 10.0;
-    auto aperture = 0.1;
 
-    camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
+    camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
     //std::cerr << lower_left_corner;
     // Render
     OutImage << "P3\n"
