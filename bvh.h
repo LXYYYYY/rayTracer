@@ -24,14 +24,14 @@ class bvh_node : public hittable{
                               : (axis == 1) ? box_y_compare
                                             : box_z_compare;
             size_t object_span = end - start;
-
+    
             if(object_span == 1){
                 left = right = objects[start];
             } else if(object_span == 2){
                 if(comparator(objects[start], objects[start+1])){
                     left = objects[start];
                     right = objects[start + 1];
-                } else {
+                } else { 
                     left = objects[start + 1];
                     right = objects[start];
                 }
